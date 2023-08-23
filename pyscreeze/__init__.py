@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 import errno
+import hashlib
 
 from contextlib import contextmanager
 
@@ -22,6 +23,7 @@ from PIL import ImageGrab
 
 PILLOW_VERSION = tuple([int(x) for x in PIL__version__.split('.')])
 
+_useCacheing: bool = False
 _useOpenCV: bool = False
 try:
     import cv2
@@ -151,6 +153,22 @@ class ImageNotFoundException(PyScreezeException):
 
     pass
 
+_needleCache = None
+_needleCacheMap = None
+
+def _initNeedleCache():
+    if not _useCacheing:
+        _needleCache = None
+        _needleCacheMap = None
+    else:
+        _needleCache = {}
+        _needleCacheMap = {}
+
+def enableCacheing(enable :bool):
+    if _useOpenCV:
+        # cacheing images is only usefull when using opencv numpy.arrays
+        _useCacheing = enable
+        _initNeedleCache()
 
 def requiresPyGetWindow(wrappedFunction):
     """
